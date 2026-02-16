@@ -1,8 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import vanna as vn
-from vanna.openai import OpenAI_Chat
-from vanna.chromadb import ChromaDB_VectorStore
 import os
 import psycopg2
 from dotenv import load_dotenv
@@ -19,18 +17,43 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 CORS(app)
 
-# Custom Vanna class combining OpenAI and ChromaDB
-class MyVanna(ChromaDB_VectorStore, OpenAI_Chat):
-    def __init__(self, config=None):
-        ChromaDB_VectorStore.__init__(self, config=config)
-        OpenAI_Chat.__init__(self, config=config)
+# Determine which LLM provider to use
+LLM_PROVIDER = os.getenv('LLM_PROVIDER', 'openai').lower()
 
-# Initialize Vanna
-vanna_config = {
-    'api_key': os.getenv('OPENAI_API_KEY', ''),
-    'model': os.getenv('OPENAI_MODEL', 'gpt-3.5-turbo'),
-    'path': os.getenv('CHROMADB_PATH', './chromadb'),
-}
+# Import appropriate Vanna class based on provider
+if LLM_PROVIDER == 'ollama':
+    logger.info("Using Ollama for offline LLM")
+    from vanna_ollama import Ollama_Chat
+    from vanna.chromadb import ChromaDB_VectorStore
+    
+    class MyVanna(ChromaDB_VectorStore, Ollama_Chat):
+        def __init__(self, config=None):
+            ChromaDB_VectorStore.__init__(self, config=config)
+            Ollama_Chat.__init__(self, config=config)
+    
+    # Initialize Vanna with Ollama configuration
+    vanna_config = {
+        'ollama_host': os.getenv('OLLAMA_HOST', 'http://localhost:11434'),
+        'model': os.getenv('OLLAMA_MODEL', 'llama2'),
+        'path': os.getenv('CHROMADB_PATH', './chromadb'),
+    }
+else:
+    logger.info("Using OpenAI for LLM")
+    from vanna.openai import OpenAI_Chat
+    from vanna.chromadb import ChromaDB_VectorStore
+    
+    # Custom Vanna class combining OpenAI and ChromaDB
+    class MyVanna(ChromaDB_VectorStore, OpenAI_Chat):
+        def __init__(self, config=None):
+            ChromaDB_VectorStore.__init__(self, config=config)
+            OpenAI_Chat.__init__(self, config=config)
+    
+    # Initialize Vanna with OpenAI configuration
+    vanna_config = {
+        'api_key': os.getenv('OPENAI_API_KEY', ''),
+        'model': os.getenv('OPENAI_MODEL', 'gpt-3.5-turbo'),
+        'path': os.getenv('CHROMADB_PATH', './chromadb'),
+    }
 
 vn_instance = MyVanna(config=vanna_config)
 

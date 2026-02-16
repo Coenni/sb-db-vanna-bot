@@ -20,6 +20,21 @@ services:
       timeout: 5s
       retries: 5
 
+  # Ollama Service (Optional - for offline LLM)
+  # Uncomment this service to use offline models
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   container_name: ollama
+  #   ports:
+  #     - "11434:11434"
+  #   volumes:
+  #     - ollama-data:/root/.ollama
+  #   networks:
+  #     - vanna-network
+  #   # Pull model on startup (comment out after first run)
+  #   # command: >
+  #   #   bash -c "ollama serve & sleep 10 && ollama pull llama2 && wait"
+
   # Vanna AI Microservice
   vanna-service:
     build:
@@ -27,8 +42,11 @@ services:
       dockerfile: Dockerfile
     container_name: vanna-service
     environment:
+      LLM_PROVIDER: ${LLM_PROVIDER:-openai}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-your-openai-api-key}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-3.5-turbo}
+      OLLAMA_HOST: ${OLLAMA_HOST:-http://localhost:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama2}
       AUTO_TRAIN_ON_STARTUP: ${AUTO_TRAIN_ON_STARTUP:-true}
       CHROMADB_PATH: /app/chromadb
       DB_HOST: postgres
@@ -44,6 +62,9 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      # Uncomment when using Ollama
+      # ollama:
+      #   condition: service_started
     networks:
       - vanna-network
     healthcheck:
@@ -95,3 +116,5 @@ networks:
 volumes:
   postgres-data:
   vanna-chromadb:
+  # Uncomment when using Ollama
+  # ollama-data:

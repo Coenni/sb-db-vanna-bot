@@ -2,10 +2,16 @@
 
 Get the Vanna AI application up and running in minutes!
 
+## Choose Your Setup
+
+- **🌐 Online Mode (OpenAI)** - Follow this guide
+- **🔒 Offline Mode (Ollama)** - See [OFFLINE_SETUP.md](OFFLINE_SETUP.md) - No internet/API key required!
+
 ## Prerequisites
 
 - Docker and Docker Compose installed on your machine
-- OpenAI API key (get one from https://platform.openai.com/api-keys)
+- **For Online Mode:** OpenAI API key (get one from https://platform.openai.com/api-keys)
+- **For Offline Mode:** See [OFFLINE_SETUP.md](OFFLINE_SETUP.md)
 
 ## Step 1: Clone and Configure
 

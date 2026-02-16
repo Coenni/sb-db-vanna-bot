@@ -6,6 +6,8 @@ A complete full-stack application that integrates Vanna AI for natural language 
 
 **Just want to get started?** See [QUICKSTART.md](QUICKSTART.md)
 
+**Want offline operation?** See [OFFLINE_SETUP.md](OFFLINE_SETUP.md) - No internet required!
+
 **Want to validate everything works?** See [END_TO_END_VALIDATION.md](END_TO_END_VALIDATION.md)
 
 **Key Features:**
@@ -13,6 +15,18 @@ A complete full-stack application that integrates Vanna AI for natural language 
 - ✅ **Pre-loaded sample data** - 30 customers, 25 products, 50 orders
 - ✅ **Ready to use immediately** - Ask questions right away
 - ✅ **Extensible** - Add custom training via UI or train.http
+- ✅ **Offline mode supported** - Use local LLMs via Ollama (no API key, no internet!)
+
+## LLM Provider Options
+
+Choose your preferred LLM provider:
+
+| Provider | Internet | API Key | Cost | Setup Difficulty |
+|----------|----------|---------|------|------------------|
+| **OpenAI** (default) | Required | Required | Pay-per-use | Easy |
+| **Ollama** (offline) | Not required | Not required | Free | Medium |
+
+See [OFFLINE_SETUP.md](OFFLINE_SETUP.md) for complete offline setup instructions.
 
 ## Architecture
 
@@ -51,7 +65,7 @@ A complete full-stack application that integrates Vanna AI for natural language 
 
 ### Vanna AI Microservice (Python/Flask)
 - Integration with Vanna AI library
-- OpenAI GPT integration for natural language processing
+- **Dual LLM support:** OpenAI (cloud) or Ollama (offline)
 - ChromaDB for vector embeddings storage
 - PostgreSQL database connectivity
 - Training endpoints for DDL, documentation, and SQL examples
@@ -59,8 +73,22 @@ A complete full-stack application that integrates Vanna AI for natural language 
 
 ## Prerequisites
 
+### Required
 - Docker and Docker Compose
-- OpenAI API key (for Vanna AI)
+
+### LLM Provider (choose one)
+
+**Option 1: OpenAI (Default)**
+- OpenAI API key (get from https://platform.openai.com/api-keys)
+- Internet connection required
+- Pay-per-use pricing
+
+**Option 2: Ollama (Offline)**
+- Ollama installed (https://ollama.ai)
+- No API key required
+- No internet required (after initial setup)
+- Completely free
+- See [OFFLINE_SETUP.md](OFFLINE_SETUP.md) for details
 
 ## Quick Start
 
