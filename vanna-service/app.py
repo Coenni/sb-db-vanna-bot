@@ -60,7 +60,6 @@ def get_db_connection():
 def connect_to_database():
     """Connect Vanna to the database."""
     try:
-        connection_string = f"postgresql://{DB_CONFIG['user']}:{DB_CONFIG['password']}@{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['database']}"
         vn_instance.connect_to_postgres(
             host=DB_CONFIG['host'],
             dbname=DB_CONFIG['database'],
