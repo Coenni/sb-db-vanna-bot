@@ -1,0 +1,381 @@
+###
+# Vanna AI Training API Examples
+# 
+# This file contains example HTTP requests for training the Vanna AI model
+# with the e-commerce database schema and sample queries.
+#
+# Usage:
+# - These requests can be executed using VS Code REST Client extension
+# - Or using IntelliJ IDEA HTTP Client
+# - Or using tools like curl or Postman
+#
+# Prerequisites:
+# - Backend service running on http://localhost:8080
+# - PostgreSQL database initialized with sample data (see init-db.sql)
+# - OpenAI API key configured in .env file
+#
+# Training Order:
+# 1. First, train with DDL (database schema)
+# 2. Then, train with documentation (business context)
+# 3. Finally, train with SQL examples (question-answer pairs)
+###
+
+@baseUrl = http://localhost:8080/api
+
+### Health Check - Verify backend is running
+GET {{baseUrl}}/health
+
+###############################################################################
+# 1. TRAIN WITH DDL (Database Schema)
+###############################################################################
+
+### Train with customers table schema
+POST {{baseUrl}}/train/ddl
+Content-Type: application/json
+
+{
+  "ddl": "CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(100) NOT NULL, email VARCHAR(100) NOT NULL UNIQUE, country VARCHAR(50) NOT NULL, city VARCHAR(100), created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP);"
+}
+
+### Train with products table schema
+POST {{baseUrl}}/train/ddl
+Content-Type: application/json
+
+{
+  "ddl": "CREATE TABLE products (id SERIAL PRIMARY KEY, name VARCHAR(200) NOT NULL, category VARCHAR(50) NOT NULL, price DECIMAL(10, 2) NOT NULL, stock_quantity INTEGER NOT NULL DEFAULT 0, description TEXT, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP);"
+}
+
+### Train with orders table schema
+POST {{baseUrl}}/train/ddl
+Content-Type: application/json
+
+{
+  "ddl": "CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER NOT NULL REFERENCES customers(id), order_date TIMESTAMP NOT NULL, total_amount DECIMAL(10, 2) NOT NULL, status VARCHAR(20) NOT NULL DEFAULT 'pending', CONSTRAINT valid_status CHECK (status IN ('pending', 'processing', 'shipped', 'delivered', 'cancelled')));"
+}
+
+### Train with order_items table schema
+POST {{baseUrl}}/train/ddl
+Content-Type: application/json
+
+{
+  "ddl": "CREATE TABLE order_items (id SERIAL PRIMARY KEY, order_id INTEGER NOT NULL REFERENCES orders(id), product_id INTEGER NOT NULL REFERENCES products(id), quantity INTEGER NOT NULL, unit_price DECIMAL(10, 2) NOT NULL, CONSTRAINT positive_quantity CHECK (quantity > 0));"
+}
+
+### Train with all tables at once (alternative approach)
+POST {{baseUrl}}/train/ddl
+Content-Type: application/json
+
+{
+  "ddl": "CREATE TABLE customers (id SERIAL PRIMARY KEY, name VARCHAR(100) NOT NULL, email VARCHAR(100) NOT NULL UNIQUE, country VARCHAR(50) NOT NULL, city VARCHAR(100), created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP); CREATE TABLE products (id SERIAL PRIMARY KEY, name VARCHAR(200) NOT NULL, category VARCHAR(50) NOT NULL, price DECIMAL(10, 2) NOT NULL, stock_quantity INTEGER NOT NULL DEFAULT 0, description TEXT, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP); CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_id INTEGER NOT NULL REFERENCES customers(id), order_date TIMESTAMP NOT NULL, total_amount DECIMAL(10, 2) NOT NULL, status VARCHAR(20) NOT NULL DEFAULT 'pending'); CREATE TABLE order_items (id SERIAL PRIMARY KEY, order_id INTEGER NOT NULL REFERENCES orders(id), product_id INTEGER NOT NULL REFERENCES products(id), quantity INTEGER NOT NULL, unit_price DECIMAL(10, 2) NOT NULL);"
+}
+
+###############################################################################
+# 2. TRAIN WITH DOCUMENTATION (Business Context)
+###############################################################################
+
+### Train with customers table documentation
+POST {{baseUrl}}/train/documentation
+Content-Type: application/json
+
+{
+  "documentation": "The customers table stores customer information including their name, email, country, and city. Each customer has a unique email address. The created_at field tracks when the customer was registered."
+}
+
+### Train with products table documentation
+POST {{baseUrl}}/train/documentation
+Content-Type: application/json
+
+{
+  "documentation": "The products table contains the product catalog with categories (Electronics, Furniture, Office Supplies, Appliances, Accessories), pricing information, and current stock quantities. Products are organized by category to help with inventory management and sales analysis."
+}
+
+### Train with orders table documentation
+POST {{baseUrl}}/train/documentation
+Content-Type: application/json
+
+{
+  "documentation": "The orders table tracks customer orders with different statuses: pending (newly placed), processing (being prepared), shipped (in transit), delivered (completed), and cancelled. Each order is linked to a customer and has a total amount and order date."
+}
+
+### Train with order_items table documentation
+POST {{baseUrl}}/train/documentation
+Content-Type: application/json
+
+{
+  "documentation": "The order_items table contains line items for each order, linking orders to products. Each line item has a quantity and unit price, allowing for historical price tracking even if product prices change later."
+}
+
+### Train with business context documentation
+POST {{baseUrl}}/train/documentation
+Content-Type: application/json
+
+{
+  "documentation": "This is an e-commerce database tracking customers, products, orders, and order details. Customers can place multiple orders, and each order can contain multiple products. We track order status throughout the fulfillment process. Sales are analyzed by country, product category, and time period."
+}
+
+### Train with geographic analysis documentation
+POST {{baseUrl}}/train/documentation
+Content-Type: application/json
+
+{
+  "documentation": "Customer locations are important for sales analysis. The database includes customers from 16 different countries including USA, UK, Canada, Germany, France, Spain, Italy, and others. Use the country field for geographic sales analysis."
+}
+
+### Train with product categories documentation
+POST {{baseUrl}}/train/documentation
+Content-Type: application/json
+
+{
+  "documentation": "Products are categorized into 5 main categories: Electronics (laptops, phones, accessories), Furniture (desks, chairs), Office Supplies (notebooks, pens), Appliances (coffee makers, blenders), and Accessories (backpacks, chargers). Use the category field to analyze sales by product type."
+}
+
+###############################################################################
+# 3. TRAIN WITH SQL EXAMPLES (Question-Answer Pairs)
+###############################################################################
+
+### Example 1: Count total customers
+POST {{baseUrl}}/train/sql
+Content-Type: application/json
+
+{
+  "question": "How many customers do we have?",
+  "sql": "SELECT COUNT(*) as customer_count FROM customers;"
+}
+
+### Example 2: Total sales by country
+POST {{baseUrl}}/train/sql
+Content-Type: application/json
+
+{
+  "question": "Show me total sales by country",
+  "sql": "SELECT c.country, SUM(o.total_amount) as total_sales FROM orders o JOIN customers c ON o.customer_id = c.id WHERE o.status != 'cancelled' GROUP BY c.country ORDER BY total_sales DESC;"
+}
+
+### Example 3: Top selling products
+POST {{baseUrl}}/train/sql
+Content-Type: application/json
+
+{
+  "question": "What are the top 5 best-selling products?",
+  "sql": "SELECT p.name, SUM(oi.quantity) as total_sold FROM order_items oi JOIN products p ON oi.product_id = p.id GROUP BY p.id, p.name ORDER BY total_sold DESC LIMIT 5;"
+}
+
+### Example 4: Average order value per customer
+POST {{baseUrl}}/train/sql
+Content-Type: application/json
+
+{
+  "question": "What's the average order value per customer?",
+  "sql": "SELECT c.name, AVG(o.total_amount) as avg_order_value FROM customers c JOIN orders o ON c.id = o.customer_id GROUP BY c.id, c.name ORDER BY avg_order_value DESC;"
+}
+
+### Example 5: Products by category
+POST {{baseUrl}}/train/sql
+Content-Type: application/json
+
+{
+  "question": "List all products in the Electronics category",
+  "sql": "SELECT name, price, stock_quantity FROM products WHERE category = 'Electronics' ORDER BY price DESC;"
+}
+
+### Example 6: Recent orders
+POST {{baseUrl}}/train/sql
+Content-Type: application/json
+
+{
+  "question": "Show me the last 10 orders",
+  "sql": "SELECT o.id, c.name as customer_name, o.order_date, o.total_amount, o.status FROM orders o JOIN customers c ON o.customer_id = c.id ORDER BY o.order_date DESC LIMIT 10;"
+}
+
+### Example 7: Pending orders
+POST {{baseUrl}}/train/sql
+Content-Type: application/json
+
+{
+  "question": "List all pending orders with customer details",
+  "sql": "SELECT o.id, c.name, c.email, o.order_date, o.total_amount FROM orders o JOIN customers c ON o.customer_id = c.id WHERE o.status = 'pending' ORDER BY o.order_date;"
+}
+
+### Example 8: Revenue by product category
+POST {{baseUrl}}/train/sql
+Content-Type: application/json
+
+{
+  "question": "Which product category generates the most revenue?",
+  "sql": "SELECT p.category, SUM(oi.quantity * oi.unit_price) as total_revenue FROM order_items oi JOIN products p ON oi.product_id = p.id JOIN orders o ON oi.order_id = o.id WHERE o.status != 'cancelled' GROUP BY p.category ORDER BY total_revenue DESC;"
+}
+
+### Example 9: Customers without recent orders
+POST {{baseUrl}}/train/sql
+Content-Type: application/json
+
+{
+  "question": "List customers who haven't ordered in the last 30 days",
+  "sql": "SELECT c.name, c.email, MAX(o.order_date) as last_order FROM customers c LEFT JOIN orders o ON c.id = o.customer_id GROUP BY c.id, c.name, c.email HAVING MAX(o.order_date) < NOW() - INTERVAL '30 days' OR MAX(o.order_date) IS NULL ORDER BY last_order;"
+}
+
+### Example 10: Inventory value by category
+POST {{baseUrl}}/train/sql
+Content-Type: application/json
+
+{
+  "question": "What's the total inventory value by category?",
+  "sql": "SELECT category, SUM(price * stock_quantity) as inventory_value FROM products GROUP BY category ORDER BY inventory_value DESC;"
+}
+
+### Example 11: High-value customers
+POST {{baseUrl}}/train/sql
+Content-Type: application/json
+
+{
+  "question": "Show customers from the USA who have spent more than $500",
+  "sql": "SELECT c.name, c.email, SUM(o.total_amount) as total_spent FROM customers c JOIN orders o ON c.id = o.customer_id WHERE c.country = 'USA' AND o.status != 'cancelled' GROUP BY c.id, c.name, c.email HAVING SUM(o.total_amount) > 500 ORDER BY total_spent DESC;"
+}
+
+### Example 12: Order details
+POST {{baseUrl}}/train/sql
+Content-Type: application/json
+
+{
+  "question": "Show me details of order number 1",
+  "sql": "SELECT o.id, c.name as customer, o.order_date, o.status, p.name as product, oi.quantity, oi.unit_price FROM orders o JOIN customers c ON o.customer_id = c.id JOIN order_items oi ON o.id = oi.order_id JOIN products p ON oi.product_id = p.id WHERE o.id = 1;"
+}
+
+### Example 13: Monthly sales trends
+POST {{baseUrl}}/train/sql
+Content-Type: application/json
+
+{
+  "question": "Show monthly sales trends for the last 6 months",
+  "sql": "SELECT DATE_TRUNC('month', order_date) as month, COUNT(*) as order_count, SUM(total_amount) as total_sales FROM orders WHERE order_date >= NOW() - INTERVAL '6 months' AND status != 'cancelled' GROUP BY DATE_TRUNC('month', order_date) ORDER BY month;"
+}
+
+### Example 14: Products running low on stock
+POST {{baseUrl}}/train/sql
+Content-Type: application/json
+
+{
+  "question": "Which products have low stock (less than 50 units)?",
+  "sql": "SELECT name, category, stock_quantity, price FROM products WHERE stock_quantity < 50 ORDER BY stock_quantity ASC;"
+}
+
+### Example 15: Customer order frequency
+POST {{baseUrl}}/train/sql
+Content-Type: application/json
+
+{
+  "question": "How many orders has each customer placed?",
+  "sql": "SELECT c.name, c.email, COUNT(o.id) as order_count, SUM(o.total_amount) as total_spent FROM customers c LEFT JOIN orders o ON c.id = o.customer_id GROUP BY c.id, c.name, c.email ORDER BY order_count DESC;"
+}
+
+###############################################################################
+# 4. ASK QUESTIONS (Test the trained model)
+###############################################################################
+
+### Ask: Total customers
+POST {{baseUrl}}/ask
+Content-Type: application/json
+
+{
+  "question": "How many customers do we have?"
+}
+
+### Ask: Sales by country
+POST {{baseUrl}}/ask
+Content-Type: application/json
+
+{
+  "question": "Show me total sales by country"
+}
+
+### Ask: Top products
+POST {{baseUrl}}/ask
+Content-Type: application/json
+
+{
+  "question": "What are the top 5 best-selling products?"
+}
+
+### Ask: Average order value
+POST {{baseUrl}}/ask
+Content-Type: application/json
+
+{
+  "question": "What's the average order value?"
+}
+
+### Ask: Products in category
+POST {{baseUrl}}/ask
+Content-Type: application/json
+
+{
+  "question": "List all products in the Electronics category"
+}
+
+### Ask: Pending orders
+POST {{baseUrl}}/ask
+Content-Type: application/json
+
+{
+  "question": "Show me all pending orders"
+}
+
+### Ask: Revenue analysis
+POST {{baseUrl}}/ask
+Content-Type: application/json
+
+{
+  "question": "Which product category generates the most revenue?"
+}
+
+### Ask: Customer analysis
+POST {{baseUrl}}/ask
+Content-Type: application/json
+
+{
+  "question": "Which customers from the USA have spent more than $500?"
+}
+
+###############################################################################
+# 5. MANAGE TRAINING DATA
+###############################################################################
+
+### Get all training data
+GET {{baseUrl}}/training-data
+
+###############################################################################
+# NOTES AND TIPS
+###############################################################################
+#
+# Training Best Practices:
+# 1. Start with DDL to teach the model about table structures and relationships
+# 2. Add documentation to provide business context and domain knowledge
+# 3. Include SQL examples covering common query patterns and use cases
+# 4. Use diverse examples that demonstrate different types of queries:
+#    - Simple SELECT queries
+#    - JOINs across multiple tables
+#    - Aggregations (COUNT, SUM, AVG)
+#    - GROUP BY with HAVING clauses
+#    - Date/time functions
+#    - Subqueries and complex conditions
+# 5. Be specific in questions to get better SQL generation
+# 6. Include both simple and complex queries in training
+#
+# Common Query Patterns Covered:
+# - Basic counts and listings
+# - Sales analysis by geography and category
+# - Customer segmentation and analysis
+# - Inventory management
+# - Time-based trends and reporting
+# - Join operations across related tables
+# - Aggregations with grouping
+# - Filtering with WHERE and HAVING
+#
+# Troubleshooting:
+# - If queries don't generate well, add more similar examples
+# - Make sure DDL is trained before asking questions
+# - Check that example questions match real use cases
+# - Verify database connection is working
+# - Review training data using GET /training-data endpoint
+#
+###############################################################################
