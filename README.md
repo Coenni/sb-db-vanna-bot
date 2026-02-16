@@ -102,10 +102,16 @@ docker-compose up -d
 ```
 
 This will start:
-- PostgreSQL database (port 5432)
+- PostgreSQL database (port 5432) with pre-populated sample data
 - Vanna AI microservice (port 5000)
 - Spring Boot backend (port 8080)
 - Angular frontend (port 4200)
+
+**Note:** The PostgreSQL database is automatically initialized with comprehensive sample e-commerce data including:
+- 30 customers from 16 different countries
+- 25 products across 5 categories (Electronics, Furniture, Office Supplies, Appliances, Accessories)
+- 50 orders with various statuses (delivered, pending, processing, shipped, cancelled)
+- Order history spanning several months for time-based analysis
 
 ### 4. Access the Application
 
@@ -124,28 +130,61 @@ Before asking questions, you need to train the Vanna AI model:
 3. Optionally add **Documentation** to provide context
 4. Add **SQL Examples** with question-answer pairs
 
-Example DDL training (already in database):
+Example DDL training (sample schema already in database):
 ```sql
-CREATE TABLE users (
+CREATE TABLE customers (
     id SERIAL PRIMARY KEY,
-    username VARCHAR(100) NOT NULL UNIQUE,
-    email VARCHAR(100) NOT NULL,
-    status VARCHAR(20) DEFAULT 'active',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    country VARCHAR(50) NOT NULL,
+    city VARCHAR(100),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE products (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(200) NOT NULL,
+    category VARCHAR(50) NOT NULL,
+    price DECIMAL(10, 2) NOT NULL,
+    stock_quantity INTEGER NOT NULL DEFAULT 0,
+    description TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE orders (
+    id SERIAL PRIMARY KEY,
+    customer_id INTEGER NOT NULL REFERENCES customers(id),
+    order_date TIMESTAMP NOT NULL,
+    total_amount DECIMAL(10, 2) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'pending'
+);
+
+CREATE TABLE order_items (
+    id SERIAL PRIMARY KEY,
+    order_id INTEGER NOT NULL REFERENCES orders(id),
+    product_id INTEGER NOT NULL REFERENCES products(id),
+    quantity INTEGER NOT NULL,
+    unit_price DECIMAL(10, 2) NOT NULL
 );
 ```
 
 Example SQL training:
-- Question: "How many active users are there?"
-- SQL: `SELECT COUNT(*) FROM users WHERE status = 'active';`
+- Question: "What are the total sales by country?"
+- SQL: `SELECT c.country, SUM(o.total_amount) as total_sales FROM orders o JOIN customers c ON o.customer_id = c.id WHERE o.status != 'cancelled' GROUP BY c.country ORDER BY total_sales DESC;`
 
 ### 6. Ask Questions
 
 Navigate to the **Ask** page and try questions like:
-- "How many users are there?"
+- "Show me total sales by country"
+- "What are the top 5 best-selling products?"
+- "List customers who haven't ordered in the last 30 days"
+- "What's the average order value per customer?"
 - "List all products in the Electronics category"
-- "Show me the total sales amount for each user"
-- "What is the average product price?"
+- "Show monthly sales trends for the last 6 months"
+- "Which product category generates the most revenue?"
+- "List all pending orders with customer details"
+- "What's the total inventory value by category?"
+- "Show customers from the USA who have spent more than $500"
 
 ## Development
 
