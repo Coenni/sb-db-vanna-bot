@@ -149,7 +149,7 @@ CREATE TABLE order_items (
 
 Example SQL training:
 - Question: "What are the total sales by country?"
-- SQL: `SELECT c.country, SUM(o.total_amount) as total_sales FROM orders o JOIN customers c ON o.customer_id = c.id GROUP BY c.country ORDER BY total_sales DESC;`
+- SQL: `SELECT c.country, SUM(o.total_amount) as total_sales FROM orders o JOIN customers c ON o.customer_id = c.id WHERE o.status != 'cancelled' GROUP BY c.country ORDER BY total_sales DESC;`
 
 ### 6. Ask Questions
 
