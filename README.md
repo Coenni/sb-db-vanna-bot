@@ -6,7 +6,9 @@ A complete full-stack application that integrates Vanna AI for natural language 
 
 **Just want to get started?** See [QUICKSTART.md](QUICKSTART.md)
 
-**Want offline operation?** See [OFFLINE_SETUP.md](OFFLINE_SETUP.md) - No internet required!
+**❗ Want to run WITHOUT internet/API key?** See [NO_INTERNET_REQUIRED.md](NO_INTERNET_REQUIRED.md) ⭐
+
+**Want full offline setup guide?** See [OFFLINE_SETUP.md](OFFLINE_SETUP.md)
 
 **Want to validate everything works?** See [END_TO_END_VALIDATION.md](END_TO_END_VALIDATION.md)
 
