@@ -2,6 +2,18 @@
 
 A complete full-stack application that integrates Vanna AI for natural language to SQL queries. The application consists of an Angular frontend, Spring Boot backend, and a Python-based Vanna AI microservice.
 
+## 🚀 Quick Start
+
+**Just want to get started?** See [QUICKSTART.md](QUICKSTART.md)
+
+**Want to validate everything works?** See [END_TO_END_VALIDATION.md](END_TO_END_VALIDATION.md)
+
+**Key Features:**
+- ✅ **Auto-training on first startup** - No manual setup required!
+- ✅ **Pre-loaded sample data** - 30 customers, 25 products, 50 orders
+- ✅ **Ready to use immediately** - Ask questions right away
+- ✅ **Extensible** - Add custom training via UI or train.http
+
 ## Architecture
 
 ```

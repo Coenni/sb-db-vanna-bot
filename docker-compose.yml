@@ -29,6 +29,7 @@ services:
     environment:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-your-openai-api-key}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-3.5-turbo}
+      AUTO_TRAIN_ON_STARTUP: ${AUTO_TRAIN_ON_STARTUP:-true}
       CHROMADB_PATH: /app/chromadb
       DB_HOST: postgres
       DB_PORT: 5432

@@ -29,13 +29,34 @@ OPENAI_API_KEY=sk-your-actual-api-key-here
 docker compose up -d
 ```
 
-Wait for all services to start (about 1-2 minutes). You can check the status:
+**What happens during startup:**
+1. PostgreSQL starts and initializes with sample e-commerce data
+2. Vanna service starts and **automatically trains itself** (first time only!)
+   - Auto-discovers database schema
+   - Trains with table structures
+   - Loads business documentation
+   - Adds 10+ SQL example queries
+3. Backend and frontend services start
+
+Wait for all services to start (about 2-3 minutes for first startup). You can check the status:
 
 ```bash
 docker compose ps
 ```
 
 All services should show as "running" or "healthy".
+
+**Check auto-training logs:**
+```bash
+docker compose logs vanna-service | grep "TRAINING"
+```
+
+You should see:
+```
+STARTING AUTOMATIC INITIAL TRAINING
+Auto-discovered 4 tables from database
+INITIAL TRAINING COMPLETE!
+```
 
 ## Step 3: Access the Application
 
@@ -44,58 +65,66 @@ Open your browser and navigate to:
 http://localhost:4200
 ```
 
-## Step 4: Train the Model
+## Step 4: Ask Questions Immediately! 🎉
 
-Before asking questions, you need to train Vanna AI about your database:
-
-1. Click on **Train** in the navigation
-2. Select the **DDL** tab
-3. Paste this sample DDL (or use your own):
-
-```sql
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(100) NOT NULL UNIQUE,
-    email VARCHAR(100) NOT NULL,
-    status VARCHAR(20) DEFAULT 'active',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-4. Click **Train DDL**
-5. Wait for success confirmation
-
-You can also add:
-- **Documentation**: Context about what the table stores
-- **SQL Examples**: Question-SQL pairs to improve accuracy
-
-Example SQL training:
-- Question: "How many active users are there?"
-- SQL: `SELECT COUNT(*) FROM users WHERE status = 'active';`
-
-## Step 5: Ask Questions
+**NEW:** No manual training required! Vanna is already trained and ready to use.
 
 1. Click on **Ask** in the navigation
 2. Type a natural language question, for example:
-   - "How many users are there?"
-   - "Show me all active users"
-   - "What is the total count of users by status?"
+   - "How many customers do we have?"
+   - "Show me total sales by country"
+   - "What are the top 5 best-selling products?"
+   - "List all pending orders"
 3. Click **Ask** or press Enter
 4. View the generated SQL and results!
 
-## Sample Database
+## Step 5: Optional - Add Custom Training
 
-The application comes with a pre-populated sample database including:
-- Users table
-- Products table
-- Orders table
-- Order items table
+Want to add your own training data? You have two options:
+
+### Option A: Use the Web Interface
+
+1. Click on **Train** in the navigation
+2. Add custom DDL, documentation, or SQL examples
+3. Click the appropriate Train button
+
+### Option B: Use train.http File
+
+The repository includes `train.http` with 50+ ready-to-use training examples:
+
+1. Open `train.http` in VS Code (with REST Client extension) or IntelliJ IDEA
+2. Execute individual requests to add more training:
+   - Additional DDL for new tables
+   - More documentation for business context
+   - Additional SQL examples for specific use cases
+
+Example from train.http:
+```http
+### Train with custom SQL example
+POST http://localhost:8080/api/train/sql
+Content-Type: application/json
+
+{
+  "question": "Show customers who haven't ordered in 60 days",
+  "sql": "SELECT c.name, c.email, MAX(o.order_date) as last_order FROM customers c LEFT JOIN orders o ON c.id = o.customer_id GROUP BY c.id HAVING MAX(o.order_date) < NOW() - INTERVAL '60 days';"
+}
+```
+
+## Pre-Loaded Sample Database
+
+The application comes with comprehensive sample data:
+- **30 customers** from 16 different countries
+- **25 products** across 5 categories (Electronics, Furniture, Office Supplies, Appliances, Accessories)
+- **50 orders** with various statuses (delivered, pending, processing, shipped, cancelled)
+- **Order history** spanning several months
 
 Try these sample questions:
-- "How many products are in the Electronics category?"
-- "Show me all users with their total order amounts"
-- "What are the top 5 most expensive products?"
-- "List all completed orders"
+- "Show me total sales by country"
+- "What are the top 5 best-selling products?"
+- "List customers who haven't ordered in the last 30 days"
+- "What's the average order value per customer?"
+- "Which product category generates the most revenue?"
+- "Show customers from the USA who have spent more than $500"
 
 ## Stopping the Application
 
