@@ -1,62 +1,56 @@
 # Using Vanna AI Without Internet Connection
 
-**Question:** "I want to use offline models without internet connection"
+**Question:** "Now when I run docker-compose up local without internet, language model will be active?"
 
-**Answer:** ✅ **YES! You can run this application completely offline!**
+**Answer:** ✅ **YES! Use the offline startup script!**
 
-## Quick Setup (5 Steps)
+## Super Simple Setup (2 Steps!)
 
-### 1. Install Ollama
+### Option 1: Use the Startup Script (Recommended)
 
 **Linux/Mac:**
 ```bash
-curl -fsSL https://ollama.ai/install.sh | sh
+./start-offline.sh
 ```
 
 **Windows:**
-Download from https://ollama.ai/download
+```batch
+start-offline.bat
+```
 
-### 2. Download a Model (While You Have Internet)
+**That's it!** The script will:
+- ✅ Start all services with Ollama
+- ✅ Download llama2 model automatically (first time only)
+- ✅ Configure everything for offline use
+- ✅ No manual configuration needed!
+
+### Option 2: Manual Docker Compose
 
 ```bash
-# This is the ONLY time you need internet
-ollama pull llama2
+docker compose -f docker-compose.yml -f docker-compose.offline.yml up -d
 ```
 
-**That's it!** You can now disconnect from the internet.
+This uses the offline configuration that:
+- Includes Ollama service
+- Auto-downloads llama2 model
+- Configures Vanna to use Ollama
+- Works completely offline
 
-### 3. Configure for Offline Mode
+## What Happens on First Run
 
-Edit `.env`:
-```bash
-cp .env.example .env
-```
+1. **First Time (Requires Internet - One Time Only)**
+   - Downloads Ollama Docker image (~1GB)
+   - Downloads llama2 model (~4GB)
+   - Takes 5-10 minutes depending on your connection
 
-Set these values:
-```env
-LLM_PROVIDER=ollama
-OLLAMA_HOST=http://localhost:11434
-OLLAMA_MODEL=llama2
-```
-
-**No OpenAI API key needed!**
-
-### 4. Start Ollama
-
-```bash
-ollama serve
-```
-
-Leave this running in a terminal.
-
-### 5. Start the Application
-
-```bash
-docker compose up -d
-```
+2. **After First Run (NO Internet Needed)**
+   - Starts in ~1 minute
+   - Everything runs offline
+   - Model is cached locally
 
 ## ✅ You're Now Running Completely Offline!
 
+After the first run:
 - ❌ No internet connection required
 - ❌ No OpenAI API key required
 - ❌ No API costs
@@ -64,74 +58,135 @@ docker compose up -d
 - ✅ Unlimited queries
 - ✅ Free forever
 
-## How It Works
+## Test It Works Offline
 
-Instead of sending your questions to OpenAI's servers over the internet, the application now uses **Ollama** - a tool that runs AI models locally on your computer.
+1. Run the startup script (first time)
+2. Wait for setup to complete
+3. **Disconnect from the internet**
+4. Open http://localhost:4200
+5. Ask: "How many customers do we have?"
+6. Get instant results - all processed locally!
 
-**Before (OpenAI - requires internet):**
+## Comparison
+
+### Before (Manual Setup)
+
+```bash
+# Install Ollama separately
+curl -fsSL https://ollama.ai/install.sh | sh
+
+# Pull model manually  
+ollama pull llama2
+
+# Start Ollama separately
+ollama serve &
+
+# Configure .env manually
+echo "LLM_PROVIDER=ollama" > .env
+
+# Start application
+docker compose up -d
 ```
-Your Question → Internet → OpenAI Servers → Response → Internet → You
-💰 Costs money | ☁️ Cloud-based | 🌐 Requires internet
+
+### Now (Automatic Setup)
+
+```bash
+# One command does everything!
+./start-offline.sh
 ```
 
-**Now (Ollama - offline):**
-```
-Your Question → Your Local Ollama → Response → You
-💚 Free | 🔒 Private | 📡 No internet needed
-```
+## Advanced: If You Already Have Ollama Installed
 
-## Test It
+If you already have Ollama installed on your machine (not in Docker):
 
-1. **Disconnect from the internet**
-2. Open http://localhost:4200
-3. Ask: "How many customers do we have?"
-4. Get instant results - all processed locally!
-
-## Switching Between Online/Offline
-
-You can switch anytime by editing `.env`:
-
-**Use Offline (Ollama):**
+**Edit `.env`:**
 ```env
 LLM_PROVIDER=ollama
+OLLAMA_HOST=http://host.docker.internal:11434  # For Mac/Windows
+# Or
+OLLAMA_HOST=http://172.17.0.1:11434  # For Linux
 ```
 
-**Use Online (OpenAI):**
-```env
-LLM_PROVIDER=openai
-OPENAI_API_KEY=sk-your-key-here
-```
-
-Then restart:
+**Then use regular docker-compose:**
 ```bash
-docker compose restart vanna-service
+docker compose up -d
 ```
 
-## Need More Details?
+## Managing the Offline Setup
 
-See [OFFLINE_SETUP.md](OFFLINE_SETUP.md) for:
-- Detailed setup instructions
-- Different model options
-- Docker containerized Ollama
-- Performance optimization
-- Troubleshooting
-- Hardware requirements
+**View logs:**
+```bash
+docker compose -f docker-compose.yml -f docker-compose.offline.yml logs -f
+```
+
+**Stop services:**
+```bash
+docker compose -f docker-compose.yml -f docker-compose.offline.yml down
+```
+
+**Restart services:**
+```bash
+docker compose -f docker-compose.yml -f docker-compose.offline.yml restart
+```
+
+**Check model status:**
+```bash
+docker exec ollama ollama list
+```
+
+## Switch to Different Model
+
+You can use different models by editing `docker-compose.offline.yml`:
+
+```yaml
+vanna-service:
+  environment:
+    OLLAMA_MODEL: mistral  # or codellama, llama3, etc.
+```
+
+Then rebuild:
+```bash
+docker compose -f docker-compose.yml -f docker-compose.offline.yml up -d
+```
+
+## Troubleshooting
+
+### "Model download failed"
+
+Make sure you have internet on first run. The llama2 model is ~4GB.
+
+### "Ollama service unhealthy"
+
+Check logs:
+```bash
+docker compose -f docker-compose.yml -f docker-compose.offline.yml logs ollama
+```
+
+### Services start but can't connect to Ollama
+
+Wait a bit longer - model download can take time on first run. Check progress:
+```bash
+docker compose -f docker-compose.yml -f docker-compose.offline.yml logs -f ollama
+```
 
 ## Summary
 
-**What you asked for:** "Use offline models without internet connection"
+**Your Question:** "Now when I run docker-compose up local without internet, language model will be active?"
 
-**What you got:**
-- ✅ Offline operation via Ollama
-- ✅ No internet required (after initial setup)
-- ✅ No API key required
-- ✅ No costs
-- ✅ Complete privacy
-- ✅ Easy setup (5 steps)
-- ✅ Same features as online mode
+**Answer:** 
 
-**All your prerequisites are now optional!**
-- ~~OpenAI API key~~ → **Not needed for offline mode**
-- ~~Internet connection~~ → **Not needed for offline mode**
+✅ **YES!** Just use:
+```bash
+./start-offline.sh
+```
 
-Enjoy your completely offline, private, and free Vanna AI experience! 🎉
+**After first run, you can:**
+- ✅ Disconnect from internet
+- ✅ Use the application normally
+- ✅ All LLM processing happens locally
+
+**No manual Ollama installation needed!**
+**No configuration needed!**
+**Just run the script!**
+
+The application now works completely offline with one simple command! 🎉

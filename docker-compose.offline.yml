@@ -1,0 +1,64 @@
+version: '3.8'
+
+# Docker Compose override for OFFLINE mode
+# 
+# This file enables offline LLM support using Ollama.
+# Use with: docker compose -f docker-compose.yml -f docker-compose.offline.yml up
+#
+# or create an alias: alias docker-compose-offline='docker compose -f docker-compose.yml -f docker-compose.offline.yml'
+
+services:
+  # Ollama Service - Local LLM Server
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    networks:
+      - vanna-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    # Pull model on first startup
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        # Start Ollama server in background
+        ollama serve &
+        OLLAMA_PID=$!
+        
+        # Wait for Ollama to be ready
+        echo "Waiting for Ollama to start..."
+        sleep 10
+        
+        # Check if llama2 model exists, if not pull it
+        if ! ollama list | grep -q "llama2"; then
+          echo "Pulling llama2 model (first time only, ~4GB download)..."
+          ollama pull llama2
+          echo "Model downloaded successfully!"
+        else
+          echo "llama2 model already exists"
+        fi
+        
+        # Keep Ollama running
+        wait $OLLAMA_PID
+
+  # Vanna Service - Override to use Ollama
+  vanna-service:
+    environment:
+      LLM_PROVIDER: ollama
+      OLLAMA_HOST: http://ollama:11434
+      OLLAMA_MODEL: llama2
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+
+volumes:
+  ollama-data:
