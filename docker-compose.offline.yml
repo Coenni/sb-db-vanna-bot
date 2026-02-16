@@ -24,13 +24,12 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
-    # Pull model on first startup
+    # Pull model on first startup, then run Ollama in foreground
     entrypoint: ["/bin/bash", "-c"]
     command:
       - |
-        # Start Ollama server in background
+        # Start Ollama server in background temporarily for model pull
         ollama serve &
-        OLLAMA_PID=$!
         
         # Wait for Ollama to be ready
         echo "Waiting for Ollama to start..."
@@ -45,8 +44,13 @@ services:
           echo "llama2 model already exists"
         fi
         
-        # Keep Ollama running
-        wait $OLLAMA_PID
+        # Stop the temporary background server
+        pkill ollama
+        sleep 2
+        
+        # Start Ollama in foreground to keep container running
+        echo "Starting Ollama server..."
+        exec ollama serve
 
   # Vanna Service - Override to use Ollama
   vanna-service:
