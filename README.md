@@ -2,6 +2,27 @@
 
 A complete full-stack application that integrates Vanna AI for natural language to SQL queries. The application consists of an Angular frontend, Spring Boot backend, and a Python-based Vanna AI microservice.
 
+## ⚠️ Security Notice
+
+**Important**: Please review [SECURITY.md](SECURITY.md) before deployment.
+
+### Known Vulnerabilities
+
+1. **Angular XSS Vulnerabilities** (Current: v17.3.12)
+   - Affected by XSRF token leakage and XSS via SVG attributes
+   - **Action Required**: Upgrade to Angular 19.2.18+ for production use
+   - See [SECURITY.md](SECURITY.md) for workarounds if immediate upgrade not possible
+
+2. **Vanna AI Prompt Injection** (v0.7.0 - no patch available)
+   - Vulnerable to prompt injection attacks
+   - **Mitigations**: Input sanitization implemented, read-only DB user recommended
+   - See [SECURITY.md](SECURITY.md) for detailed mitigation strategies
+
+3. **Gunicorn** (Fixed: upgraded to v23.0.0)
+   - HTTP smuggling vulnerability patched
+
+For production deployment, see [SECURITY.md](SECURITY.md) for complete security guidelines.
+
 ## Architecture
 
 ```

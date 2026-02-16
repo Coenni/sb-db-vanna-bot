@@ -7,6 +7,7 @@ import os
 import psycopg2
 from dotenv import load_dotenv
 import logging
+import re
 
 # Load environment variables
 load_dotenv()
@@ -14,6 +15,55 @@ load_dotenv()
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+app = Flask(__name__)
+CORS(app)
+
+# Security: Patterns to block in user input to prevent injection attacks
+BLOCKED_PATTERNS = [
+    r';\s*DROP\s+TABLE',
+    r';\s*DELETE\s+FROM',
+    r';\s*UPDATE\s+.*\s+SET',
+    r';\s*INSERT\s+INTO',
+    r'EXEC\s*\(',
+    r'EXECUTE\s*\(',
+    r'xp_cmdshell',
+    r'sp_executesql',
+    r'<script',
+    r'javascript:',
+    r'__import__',
+    r'eval\s*\(',
+    r'exec\s*\(',
+]
+
+def sanitize_input(text, max_length=5000):
+    """
+    Sanitize user input to prevent injection attacks.
+    
+    Args:
+        text: Input text to sanitize
+        max_length: Maximum allowed length
+        
+    Returns:
+        Sanitized text
+        
+    Raises:
+        ValueError: If input contains dangerous patterns or exceeds length
+    """
+    if not text or not isinstance(text, str):
+        raise ValueError("Input must be a non-empty string")
+    
+    # Check length
+    if len(text) > max_length:
+        raise ValueError(f"Input exceeds maximum length of {max_length} characters")
+    
+    # Check for blocked patterns
+    for pattern in BLOCKED_PATTERNS:
+        if re.search(pattern, text, re.IGNORECASE):
+            logger.warning(f"Blocked potentially dangerous input pattern: {pattern}")
+            raise ValueError("Input contains potentially dangerous content")
+    
+    return text.strip()
 
 app = Flask(__name__)
 CORS(app)
@@ -91,6 +141,9 @@ def train_ddl():
         if not ddl:
             return jsonify({'error': 'DDL is required'}), 400
         
+        # Sanitize input
+        ddl = sanitize_input(ddl, max_length=10000)
+        
         vn_instance.train(ddl=ddl)
         logger.info(f"Successfully trained with DDL: {ddl[:100]}...")
         
@@ -98,6 +151,9 @@ def train_ddl():
             'success': True,
             'message': 'DDL trained successfully'
         }), 200
+    except ValueError as e:
+        logger.error(f"Validation error in DDL training: {str(e)}")
+        return jsonify({'error': str(e)}), 400
     except Exception as e:
         logger.error(f"Error training DDL: {str(e)}")
         return jsonify({'error': str(e)}), 500
@@ -112,6 +168,9 @@ def train_documentation():
         if not documentation:
             return jsonify({'error': 'Documentation is required'}), 400
         
+        # Sanitize input
+        documentation = sanitize_input(documentation, max_length=10000)
+        
         vn_instance.train(documentation=documentation)
         logger.info(f"Successfully trained with documentation: {documentation[:100]}...")
         
@@ -119,6 +178,9 @@ def train_documentation():
             'success': True,
             'message': 'Documentation trained successfully'
         }), 200
+    except ValueError as e:
+        logger.error(f"Validation error in documentation training: {str(e)}")
+        return jsonify({'error': str(e)}), 400
     except Exception as e:
         logger.error(f"Error training documentation: {str(e)}")
         return jsonify({'error': str(e)}), 500
@@ -134,6 +196,10 @@ def train_sql():
         if not question or not sql:
             return jsonify({'error': 'Both question and SQL are required'}), 400
         
+        # Sanitize inputs
+        question = sanitize_input(question, max_length=500)
+        sql = sanitize_input(sql, max_length=5000)
+        
         vn_instance.train(question=question, sql=sql)
         logger.info(f"Successfully trained with Q&A pair: {question}")
         
@@ -141,6 +207,9 @@ def train_sql():
             'success': True,
             'message': 'SQL example trained successfully'
         }), 200
+    except ValueError as e:
+        logger.error(f"Validation error in SQL training: {str(e)}")
+        return jsonify({'error': str(e)}), 400
     except Exception as e:
         logger.error(f"Error training SQL: {str(e)}")
         return jsonify({'error': str(e)}), 500
@@ -154,6 +223,9 @@ def ask_question():
         
         if not question:
             return jsonify({'error': 'Question is required'}), 400
+        
+        # Sanitize input
+        question = sanitize_input(question, max_length=500)
         
         logger.info(f"Processing question: {question}")
         
@@ -174,6 +246,9 @@ def ask_question():
             'results': results,
             'columns': list(df.columns) if df is not None else []
         }), 200
+    except ValueError as e:
+        logger.error(f"Validation error processing question: {str(e)}")
+        return jsonify({'error': str(e)}), 400
     except Exception as e:
         logger.error(f"Error processing question: {str(e)}")
         return jsonify({'error': str(e)}), 500
