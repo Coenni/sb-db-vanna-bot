@@ -1,0 +1,99 @@
+<div class="train-container">
+  <h2>Train Vanna AI Model</h2>
+  
+  <div class="tabs">
+    <button 
+      [class.active]="activeTab === 'ddl'" 
+      (click)="setActiveTab('ddl')"
+      class="tab-button">
+      DDL
+    </button>
+    <button 
+      [class.active]="activeTab === 'documentation'" 
+      (click)="setActiveTab('documentation')"
+      class="tab-button">
+      Documentation
+    </button>
+    <button 
+      [class.active]="activeTab === 'sql'" 
+      (click)="setActiveTab('sql')"
+      class="tab-button">
+      SQL Example
+    </button>
+  </div>
+
+  <div class="tab-content">
+    <!-- DDL Tab -->
+    <div *ngIf="activeTab === 'ddl'" class="form-section">
+      <h3>Train with DDL (Data Definition Language)</h3>
+      <p>Enter CREATE TABLE statements or other DDL to teach Vanna about your database schema.</p>
+      
+      <textarea 
+        [(ngModel)]="ddl" 
+        placeholder="CREATE TABLE users (&#10;  id SERIAL PRIMARY KEY,&#10;  name VARCHAR(100),&#10;  email VARCHAR(100)&#10;);"
+        rows="10"
+        class="form-textarea"></textarea>
+      
+      <button 
+        (click)="trainDDL()" 
+        [disabled]="loading"
+        class="btn btn-primary">
+        {{ loading ? 'Training...' : 'Train DDL' }}
+      </button>
+    </div>
+
+    <!-- Documentation Tab -->
+    <div *ngIf="activeTab === 'documentation'" class="form-section">
+      <h3>Train with Documentation</h3>
+      <p>Provide additional context about your database, tables, or business logic.</p>
+      
+      <textarea 
+        [(ngModel)]="documentation" 
+        placeholder="The users table stores customer information. The status field can be 'active', 'inactive', or 'pending'."
+        rows="10"
+        class="form-textarea"></textarea>
+      
+      <button 
+        (click)="trainDocumentation()" 
+        [disabled]="loading"
+        class="btn btn-primary">
+        {{ loading ? 'Training...' : 'Train Documentation' }}
+      </button>
+    </div>
+
+    <!-- SQL Example Tab -->
+    <div *ngIf="activeTab === 'sql'" class="form-section">
+      <h3>Train with SQL Example</h3>
+      <p>Provide example questions with their corresponding SQL queries.</p>
+      
+      <label>Question:</label>
+      <input 
+        type="text" 
+        [(ngModel)]="question" 
+        placeholder="How many active users are there?"
+        class="form-input">
+      
+      <label>SQL Query:</label>
+      <textarea 
+        [(ngModel)]="sql" 
+        placeholder="SELECT COUNT(*) FROM users WHERE status = 'active';"
+        rows="6"
+        class="form-textarea"></textarea>
+      
+      <button 
+        (click)="trainSQL()" 
+        [disabled]="loading"
+        class="btn btn-primary">
+        {{ loading ? 'Training...' : 'Train SQL Example' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  <div *ngIf="successMessage" class="alert alert-success">
+    {{ successMessage }}
+  </div>
+  <div *ngIf="errorMessage" class="alert alert-error">
+    {{ errorMessage }}
+  </div>
+</div>

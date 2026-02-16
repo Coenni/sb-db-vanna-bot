@@ -1,0 +1,17 @@
+<div class="app-container">
+  <header class="app-header">
+    <h1>{{ title }}</h1>
+    <nav>
+      <a routerLink="/train" routerLinkActive="active" class="nav-link">Train</a>
+      <a routerLink="/ask" routerLinkActive="active" class="nav-link">Ask</a>
+    </nav>
+  </header>
+  
+  <main class="app-main">
+    <router-outlet></router-outlet>
+  </main>
+  
+  <footer class="app-footer">
+    <p>&copy; 2024 Vanna AI Assistant - Natural Language to SQL</p>
+  </footer>
+</div>

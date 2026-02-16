@@ -1,0 +1,69 @@
+<div class="ask-container">
+  <h2>Ask Questions to Vanna AI</h2>
+  
+  <div class="question-form">
+    <p>Ask natural language questions about your database and get SQL queries and results.</p>
+    
+    <div class="input-group">
+      <input 
+        type="text" 
+        [(ngModel)]="question" 
+        (keyup.enter)="askQuestion()"
+        placeholder="e.g., How many users are active?"
+        class="form-input"
+        [disabled]="loading">
+      
+      <button 
+        (click)="askQuestion()" 
+        [disabled]="loading"
+        class="btn btn-primary">
+        {{ loading ? 'Processing...' : 'Ask' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="errorMessage" class="alert alert-error">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Results -->
+  <div *ngIf="result" class="results-section">
+    <div class="result-header">
+      <h3>Results</h3>
+      <button (click)="clearResults()" class="btn btn-secondary">Clear</button>
+    </div>
+
+    <div class="result-item">
+      <h4>Question:</h4>
+      <p class="question-text">{{ result.question }}</p>
+    </div>
+
+    <div class="result-item">
+      <h4>Generated SQL:</h4>
+      <pre class="sql-code">{{ result.sql }}</pre>
+    </div>
+
+    <div class="result-item" *ngIf="result.results && result.results.length > 0">
+      <h4>Query Results ({{ result.results.length }} rows):</h4>
+      <div class="table-container">
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th *ngFor="let col of result.columns">{{ col }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of result.results">
+              <td *ngFor="let col of result.columns">{{ row[col] }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="result-item" *ngIf="!result.results || result.results.length === 0">
+      <p class="no-results">No results returned from the query.</p>
+    </div>
+  </div>
+</div>
