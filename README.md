@@ -82,7 +82,7 @@ docker-compose up -d
 
 This will start:
 - PostgreSQL database (port 5432) with pre-populated sample data
-- Vanna AI microservice (port 5000)
+- Vanna AI microservice (port 5000) with **automatic initial training**
 - Spring Boot backend (port 8080)
 - Angular frontend (port 4200)
 
@@ -91,6 +91,14 @@ This will start:
 - 25 products across 5 categories (Electronics, Furniture, Office Supplies, Appliances, Accessories)
 - 50 orders with various statuses (delivered, pending, processing, shipped, cancelled)
 - Order history spanning several months for time-based analysis
+
+**First-Time Training:** On first startup, Vanna AI will automatically:
+1. Discover your database schema from PostgreSQL
+2. Train itself with table structures and relationships
+3. Load business documentation and sample queries
+4. Be ready to answer questions immediately
+
+See [HOW_VANNA_RECOGNIZES_DATABASE.md](./HOW_VANNA_RECOGNIZES_DATABASE.md) for details on how Vanna learns your database setup.
 
 ### 4. Access the Application
 
@@ -102,7 +110,20 @@ http://localhost:4200
 
 ### 5. Initial Training
 
-Before asking questions, you need to train the Vanna AI model:
+**🎉 NEW: Automatic Training on First Startup!**
+
+Vanna AI now automatically trains itself when the service starts for the first time. No manual training is required!
+
+**What happens automatically:**
+1. Vanna discovers your database schema from PostgreSQL
+2. Learns table structures and relationships
+3. Loads business documentation and context
+4. Trains with 10+ example SQL queries
+5. Ready to answer questions immediately!
+
+**Manual Training (Optional)**
+
+If you prefer manual control or want to add custom training:
 
 **Option 1: Using the Web Interface**
 1. Go to the **Train** page

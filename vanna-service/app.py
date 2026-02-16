@@ -7,6 +7,7 @@ import os
 import psycopg2
 from dotenv import load_dotenv
 import logging
+from initial_training import should_perform_initial_training, perform_initial_training
 
 # Load environment variables
 load_dotenv()
@@ -75,6 +76,50 @@ def connect_to_database():
 
 # Connect to database on startup
 connect_to_database()
+
+# Perform automatic initial training if needed
+def initialize_training():
+    """
+    Initialize Vanna training on first startup.
+    
+    This function checks if auto-training is enabled and if the model
+    needs initial training (no existing training data). If both conditions
+    are met, it performs automatic training with:
+    
+    1. Auto-discovered schema (reads actual database structure)
+    2. Predefined DDL (fallback if auto-discovery fails)
+    3. Business documentation
+    4. SQL query examples
+    
+    HOW VANNA RECOGNIZES YOUR DATABASE:
+    - Database Connection: vn_instance.connect_to_postgres() connects to PostgreSQL
+    - Schema Training: Teaches Vanna about table structures and relationships
+    - Auto-Discovery: Optionally reads actual schema from information_schema
+    - Documentation: Provides business context and domain knowledge
+    - SQL Examples: Shows Vanna how to write queries for your use cases
+    """
+    auto_train = os.getenv('AUTO_TRAIN_ON_STARTUP', 'true').lower() == 'true'
+    
+    if not auto_train:
+        logger.info("Auto-training is disabled (AUTO_TRAIN_ON_STARTUP=false)")
+        return
+    
+    logger.info("Checking if initial training is needed...")
+    
+    if should_perform_initial_training(vn_instance):
+        logger.info("Performing automatic initial training...")
+        # Pass DB_CONFIG to enable auto-discovery of actual database schema
+        success, message, counts = perform_initial_training(vn_instance, db_config=DB_CONFIG, use_auto_discovery=True)
+        
+        if success:
+            logger.info(f"✓ Auto-training successful: {message}")
+        else:
+            logger.error(f"✗ Auto-training failed: {message}")
+    else:
+        logger.info("Skipping auto-training - model already has training data")
+
+# Run initial training check
+initialize_training()
 
 @app.route('/health', methods=['GET'])
 def health():
