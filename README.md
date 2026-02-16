@@ -104,10 +104,29 @@ http://localhost:4200
 
 Before asking questions, you need to train the Vanna AI model:
 
+**Option 1: Using the Web Interface**
 1. Go to the **Train** page
 2. Start with **DDL** tab and paste the database schema (sample tables are already created)
 3. Optionally add **Documentation** to provide context
 4. Add **SQL Examples** with question-answer pairs
+
+**Option 2: Using the train.http File (Recommended for Quick Setup)**
+
+The repository includes a `train.http` file with ready-to-use training examples:
+
+1. Open `train.http` in VS Code (with REST Client extension) or IntelliJ IDEA
+2. Execute the requests in order:
+   - Start with DDL training requests (database schema)
+   - Add documentation for business context
+   - Train with SQL examples (15+ question-answer pairs)
+3. Test your training by executing the "Ask" requests at the end of the file
+
+The `train.http` file includes:
+- 5 DDL training examples
+- 7 documentation examples
+- 15 SQL question-answer pairs
+- 8 ready-to-test questions
+- Complete usage documentation
 
 Example DDL training (sample schema already in database):
 ```sql
@@ -194,6 +213,17 @@ python app.py
 
 ## API Documentation
 
+### Quick Start with train.http
+
+The easiest way to train the model and test the API is using the included `train.http` file:
+
+```bash
+# Open train.http in VS Code (with REST Client extension) or IntelliJ IDEA
+# Execute requests sequentially to train the model with sample data
+```
+
+See the `train.http` file for 30+ ready-to-use API examples.
+
 ### Backend Endpoints (Spring Boot)
 
 #### Health Check
@@ -273,7 +303,8 @@ POST /remove-training-data
 │   └── .env.example
 │
 ├── docker-compose.yml       # Docker orchestration
-├── init-db.sql             # Database initialization
+├── init-db.sql             # Database initialization with sample data
+├── train.http              # API training examples (30+ requests)
 ├── .env.example            # Environment variables template
 └── README.md               # This file
 ```
