@@ -34,6 +34,21 @@ To minimize risk when using this application:
 
 ### Security Updates Applied
 
+#### Angular Upgraded (v17.3.12 → v19.2.18)
+**Status**: ✅ Fixed  
+**Previous Vulnerabilities**:
+- XSRF Token Leakage via Protocol-Relative URLs (versions < 19.2.16)
+- XSS Vulnerability via Unsanitized SVG Script Attributes (versions <= 18.2.14)
+- Stored XSS via SVG Animation, SVG URL and MathML Attributes (versions <= 18.2.14)
+
+**Resolution**: Upgraded all @angular/* packages to v19.2.18 which includes all security patches
+
+**Dependencies Updated**:
+- @angular/animations, @angular/common, @angular/compiler, @angular/core
+- @angular/forms, @angular/platform-browser, @angular/platform-browser-dynamic, @angular/router
+- @angular/cli, @angular-devkit/build-angular, @angular/compiler-cli
+- zone.js (0.14.3 → 0.15.0) and TypeScript (5.4.2 → 5.7.0) for compatibility
+
 #### Gunicorn Upgraded (v21.2.0 → v25.1.0)
 **Status**: ✅ Fixed  
 **Previous Vulnerabilities**:
